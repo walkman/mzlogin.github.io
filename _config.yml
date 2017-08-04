@@ -4,8 +4,8 @@
 baseurl:
 url: http://www.programmers.cc/
 date_format: "ordinal"
-title: 码志
-subtitle: "打码改变人生"
+title: 孙进的个人博客
+subtitle: "醉卧沙场君莫笑，古来征战几人回。"
 description: "孙进的个人博客"
 keywords: 码志,walkman
 favicon: /favicon.ico
@@ -17,8 +17,8 @@ side_bar_repo_limit: 5
 #      Author      #
 # ---------------- #
 author: 孙进
-organization: zkh360.com
-organization_url: http://www.zkh360.com
+organization: sunjin.org
+organization_url: http://www.sunjin.org
 github_username: walkman
 location: Shanghai, China
 email: sunjin9418@163.com
