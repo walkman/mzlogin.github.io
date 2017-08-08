@@ -1,7 +1,11 @@
-.home .banner,
 .home .site-header {
-    background: #4183c4;
-    color: #fff
+    background: #fff;
+    color: #000
+}
+
+.home .banner{
+    background-image: url('../../images/banner.jpg');
+    background-size: 100%;
 }
 
 .home .banner .collection-head {
@@ -16,7 +20,7 @@
 }
 
 .home .site-header h1 a {
-    color: #fff
+    color: #000
 }
 
 .home .site-header .site-header-nav-item {
