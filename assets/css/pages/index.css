@@ -6,6 +6,7 @@
 .home .banner{
     background-image: url('../../images/banner.jpg');
     background-size: 100%;
+    background-position-y: center;
 }
 
 .home .banner .collection-head {
