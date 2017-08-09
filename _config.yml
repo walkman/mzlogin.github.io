@@ -2,7 +2,7 @@
 #   Main Configs   #
 # ---------------- #
 baseurl:
-url: http://www.programmers.cc/
+url: http://www.programmers.cc
 date_format: "ordinal"
 title: 孙进的个人博客
 subtitle: "醉卧沙场君莫笑，古来征战几人回。"
