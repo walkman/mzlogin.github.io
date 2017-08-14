@@ -4,9 +4,9 @@
 baseurl:
 url: http://www.programmers.cc
 date_format: "ordinal"
-title: 孙进的个人博客
-subtitle: "醉卧沙场君莫笑，古来征战几人回。"
-description: "孙进的个人博客"
+title: 孙进的博客
+subtitle: "士不可以不弘毅，任重而道远。"
+description: "孙进的博客"
 keywords: 码志,walkman
 favicon: /favicon.ico
 timezone: Asia/Shanghai
