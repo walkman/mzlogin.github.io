@@ -1,6 +1,6 @@
 - sitename: GitHub
-  name: mzlogin
-  url: https://github.com/mzlogin
+  name: walkman
+  url: https://github.com/walkman
 
 - sitename: 掘金
   name: mzlogin
@@ -11,16 +11,16 @@
   url: https://www.linkedin.com/in/mazhuang
 
 - sitename: 博客
-  name: 码志
-  url: http://mazhuang.org
+  name: 多情剑客
+  url: http://blog.csdn.net/sunjin9418
 
 - sitename: 微博
-  name: mzlogin
-  url: http://weibo.com/mzlogin
+  name: 爪蛙哥
+  url: https://weibo.com/u/2496552254
 
 - sitename: 知乎
-  name: mzlogin
-  url: http://www.zhihu.com/people/mzlogin
+  name: 孙伯虎
+  url: https://www.zhihu.com/people/javaj
 
 - sitename: 豆瓣
   name: 壮哥不胖
