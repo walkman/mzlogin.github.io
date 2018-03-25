@@ -1,11 +1,14 @@
-- name: Connie 酱
-  url: https://connie99.github.io
+- name: 孙进的博客
+  url: http://blog.csdn.net/sunjin9418
 
-- name: 只宁静不致远
-  url: http://zxning.github.io
+- name: 并发编程网
+  url: http://ifeve.com
 
-- name: Blog Something
-  url: http://chenxiaoyoyo.github.io
+- name: Java World
+  url: https://www.javaworld.com
 
-- name: 码志
-  url: http://mazhuang.org
+- name: importnew
+  url: http://www.importnew.com/
+  
+- name: Tech and Media Labs
+  url: http://tutorials.jenkov.com/
