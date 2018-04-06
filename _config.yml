@@ -2,7 +2,7 @@
 #   Main Configs   #
 # ---------------- #
 baseurl:
-url: http://www.programmers.cc
+url: http://www.walkersun.net
 date_format: "ordinal"
 title: 孙进的博客
 subtitle: "When you don't know which way to go, always pick the one that makes a good story."
@@ -17,7 +17,7 @@ side_bar_repo_limit: 5
 #      Author      #
 # ---------------- #
 author: 孙进
-organization: walkersun.net
+organization: CSDN
 organization_url: https://blog.csdn.net/sunjin9418
 github_username: walkman
 location: Shanghai, China
