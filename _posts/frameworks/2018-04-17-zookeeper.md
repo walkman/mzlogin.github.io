@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Zookeeper 架构原理
-categories: frameworks
+categories: [frameworks,内功心法]
 excerpt: Zookeeper 作为一个分布式的服务框架，主要用来解决分布式集群中应用系统的一致性问题，它能提供基于类似于文件系统的目录节点树方式的数据存储，但是 Zookeeper 并不是用来专门存储数据的，它的作用主要是用来维护和监控你存储的数据的状态变化。通过监控这些数据状态的变化，从而可以达到基于数据的集群管理。
 keywords: Zookeeper
 ---
