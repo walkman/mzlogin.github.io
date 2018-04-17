@@ -81,13 +81,13 @@ Observer角色接受客户端连接，将写操作转给Leader，但Observer不�
 5. Leader将结果汇总后如果需要写入，则开始写入同时把写入操作通知给Follwer，然后commit;
 6. Follwer把请求结果返回给Client
 
-
-#### Follower主要有四个功能：
+**Follower主要有四个功能：**
 1. 向Leader发送请求（PING消息、REQUEST消息、ACK消息、REVALIDATE消息）；
 2. 接收Leader消息并进行处理；
 3. 接收Client的请求，如果为写请求，发送给Leader进行投票；
 4. 返回Client结果。
-#### Follower的消息循环处理如下几种来自Leader的消息：
+
+**Follower的消息循环处理如下几种来自Leader的消息：**
 1. PING消息： 心跳消息；
 2. PROPOSAL消息：Leader发起的提案，要求Follower投票；
 3. COMMIT消息：服务器端最新一次提案的信息；
