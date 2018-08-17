@@ -67,4 +67,13 @@ Elasticsearch是一个实时分布式搜索和分析引擎。它让你以前所�
 现在集群健康状态哪里显示未连接，这是因为head插件没有权限获取集群节点的信息，接下来设置权限
 
 ## 4. 设置权限
+进入config目录，打开配置文件 *elasticsearch.yml*，添加配置项。
+```yaml
+# elasticsearch中启用CORS
+http.cors.enabled: true
+# 允许访问的IP地址段，* 为所有IP都可以访问
+http.cors.allow-origin: "*"
+```
+重新启动elasticsearch，再次访问[http://localhost:9100/](http://localhost:9100/) 发现已经连接成功。
 
+现在就可以执行增删改查操作了。
