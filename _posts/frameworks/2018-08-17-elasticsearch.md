@@ -7,7 +7,7 @@ excerpt: Elasticsearch是一个实时分布式搜索和分析引擎。它让你�
 keywords: ElasticSearch
 ---
 
-## 一、ElasticSearch 基本概念
+### 一、ElasticSearch 基本概念
 Elasticsearch是一个实时分布式搜索和分析引擎。它让你以前所未有的速度处理大数据成为可能。它用于全文搜索、结构化搜索、分析以及将这三者混合使用。
 
 先看一个关系型数据库和ES的概念对比
@@ -18,7 +18,7 @@ Elasticsearch -> Indices   -> Types -> Documents -> Fields
 Elasticsearch集群可以包含多个索引(indices)（数据库），每一个索引可以包含多个类型(types)（表），每一个类型包含多
 个文档(documents)（行），然后每个文档包含多个字段(Fields)（列）。
 
-### 数据层面
+#### 数据层面
 * 索引（index）
 ElasticSearch将它的数据存储在一个或多个索引（index）中。用SQL领域的术语来类比，索引就像数据库，可以向索引写入文档或者从索引中读取文档，
 并通过ElasticSearch内部使用Lucene将数据写入索引或从索引中检索数据。
@@ -29,7 +29,7 @@ ElasticSearch将它的数据存储在一个或多个索引（index）中。用SQ
 * 映射（mapping）
 所有文档写进索引之前都会先进行分析，如何将输入的文本分割为词条、哪些词条又会被过滤，这种行为叫做映射（mapping）。一般由用户自己定义规则。
 
-### 服务层面
+#### 服务层面
 * 接近实时（NRT）
 Elasticsearch 是一个接近实时的搜索平台。这意味着，从索引一个文档直到这个文档能够被搜索到有一个很小的延迟（通常是 1 秒）。
 * 集群（cluster）
@@ -57,7 +57,7 @@ GET /_cat/health?v   #可以看到集群状态
 一个索引可以存储超出单个结点硬件限制的大量数据。比如，一个具有10亿文档的索引占据1TB的磁盘空间，而任一节点可能没有这样大的磁盘空间来存储或者单个节点处理搜索请求，响应会太慢。
 为了解决这个问题，Elasticsearch提供了将索引划分成多片的能力，这些片叫做分片。当你创建一个索引的时候，你可以指定你想要的分片的数量。每个分片本身也是一个功能完善并且独立的“索引”，这个“索引” 可以被放置到集群中的任何节点上。
 
-## 二.安装运行ElasticSearch
+### 二.安装运行ElasticSearch
 
 #### 1.ElasticSearch下载安装
 本文以windows7 64位系统 演示。
@@ -126,9 +126,12 @@ http.cors.allow-origin: "*"
 现在就可以执行增删改查操作了。
 
 
-## 三、实战练习
+### 三、实战练习
 #### 1.增删改查操作
 * **在索引中新建一个索引**
+
+*megacorp*
+
 * **PUT**
 
 *PUT /megacorp/employee/1*
@@ -192,7 +195,82 @@ http.cors.allow-origin: "*"
 }
 ```
 
+我们通过HTTP方法 GET 来检索文档，同样的，我们可以使用 DELETE 方法删除文档，使用 HEAD 方法检查某文档是否存在。如果想更新已存在的文档，我们只需再 PUT 一次。
 
+* **SEARCH**
+
+*GET /megacorp/employee/_search?q=last_name:Smith*
+
+我们在请求中使用 _search 关键字，然后将查询语句传递给参数 q= 。这样就可以得到所有姓氏为Smith的结果：
+
+```json
+{
+    "hits": {
+        "total": 2,
+        "max_score": 0.30685282,
+        "hits": [
+            {
+                "_source": {
+                    "first_name": "John",
+                    "last_name": "Smith",
+                    "age": 25,
+                    "about": "I love to go rock climbing",
+                    "interests": [ "sports", "music" ]
+                    }
+            },
+            {
+                "_source": {
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "age": 32,
+                    "about": "I like to collect rock albums",
+                    "interests": [ "music" ]
+                    }
+            }
+        ]
+    }
+}
+```
+
+* **DSL语句查询**
+查询字符串搜索便于通过命令行完成特定(ad hoc)的搜索，但是它也有局限性（参阅简单搜索章节）。
+Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它允许你构建更加复杂、强大的查询。
+
+*POST /megacorp/employee/_search*
+```json
+{
+  "query": {
+    "match": {
+      "last_name": "Smith"
+    }
+  }
+}
+```
+
+这会返回与之前查询相同的结果。
+
+更加复杂的查询
+*POST /megacorp/employee/_search*
+```json
+{
+  "query": {
+    "bool": {
+      "filter": {
+        "range": {
+          "age": {
+            "gt": 30
+          }
+        }
+      },
+      "must": {
+        "match": {
+          "last_name": "Smith"
+        }
+      }
+    }
+  }
+}
+```
 
 
 
