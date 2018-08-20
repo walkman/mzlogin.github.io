@@ -137,11 +137,11 @@ http.cors.allow-origin: "*"
 *PUT /megacorp/employee/1*
 ```json
 {
-"first_name" : "John",
-"last_name" : "Smith",
-"age" : 25,
-"about" : "I love to go rock climbing",
-"interests": [ "sports", "music" ]
+    "first_name" : "John",
+    "last_name" : "Smith",
+    "age" : 25,
+    "about" : "I love to go rock climbing",
+    "interests": [ "sports", "music" ]
 }
 ```
 
@@ -153,21 +153,21 @@ http.cors.allow-origin: "*"
 *PUT /megacorp/employee/2*
 ```json
 {
-"first_name" : "Jane",
-"last_name" : "Smith",
-"age" : 32,
-"about" : "I like to collect rock albums",
-"interests": [ "music" ]
+    "first_name" : "Jane",
+    "last_name" : "Smith",
+    "age" : 32,
+    "about" : "I like to collect rock albums",
+    "interests": [ "music" ]
 }
 ```
 *PUT /megacorp/employee/3*
 ```json
 {
-"first_name" : "Douglas",
-"last_name" : "Fir",
-"age" : 35,
-"about": "I like to build cabinets",
-"interests": [ "forestry" ]
+    "first_name" : "Douglas",
+    "last_name" : "Fir",
+    "age" : 35,
+    "about": "I like to build cabinets",
+    "interests": [ "forestry" ]
 }
 ```
 
@@ -249,7 +249,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 
 这会返回与之前查询相同的结果。
 
-更加复杂的查询
+* **更加复杂的查询**
 *POST /megacorp/employee/_search*
 ```json
 {
@@ -272,5 +272,100 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 }
 ```
 
+* **全文搜索**
+```json
+{
+  "query": {
+    "match": {
+      "about": "rock climbing"
+    }
+  }
+}
+```
+查询结果
+```json
+{
+    "took":31,
+    "timed_out":false,
+    "_shards":{
+        "total":5,
+        "successful":5,
+        "skipped":0,
+        "failed":0
+    },
+    "hits":{
+        "total":2,
+        "max_score":0.5753642,
+        "hits":[
+            {
+                "_index":"megacorp",
+                "_type":"employee",
+                "_id":"1",
+                "_score":0.5753642,
+                "_source":{
+                    "first_name":"John",
+                    "last_name":"Smith",
+                    "age":25,
+                    "about":"I love to go rock climbing",
+                    "interests":[
+                        "sports",
+                        "music"
+                    ]
+                }
+            },
+            {
+                "_index":"megacorp",
+                "_type":"employee",
+                "_id":"2",
+                "_score":0.2876821,
+                "_source":{
+                    "first_name":"Jane",
+                    "last_name":"Smith",
+                    "age":32,
+                    "about":"I like to collect rock albums",
+                    "interests":[
+                        "music"
+                    ]
+                }
+            }
+        ]
+    }
+}
+```
+"_score"字段是结果相关性评分。
+默认情况下，Elasticsearch根据结果相关性评分来对结果集进行排序，所谓的「结果相关性评分」就是文档与查询条件的匹配程度。
+这个例子很好的解释了Elasticsearch如何在各种文本字段中进行全文搜索，并且返回相关性最大的结果集。
 
+* **短语搜索**
+有时候你想要确切的匹配若干个单词或者短语(phrases)。例如我们想要查询同时包含"rock"和"climbing"（并且是相邻的）的员工记录。我们只要将 match 查询变更为 match_phrase 查询即可:
+```json
+{
+  "query": {
+    "match_phrase": {
+      "about": "rock climbing"
+    }
+  }
+}
+```
+毫无疑问，该查询返回John Smith的文档。
 
+* **高亮搜索**
+很多应用喜欢从每个搜索结果中高亮(highlight)匹配到的关键字，这样用户可以知道为什么这些文档和查询相匹配。
+```json
+{
+  "query": {
+    "match_phrase": {
+      "about": "rock climbing"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "about": {}
+    }
+  }
+}
+```
+当我们运行这个语句时，会命中与之前相同的结果，但是在返回结果中会有一个新的部分叫做 highlight ，这里包含了来自 about 字段中的文本，并且用 <em></em> 来标识匹配到的单词。
+
+* **分析**
+最后，我们还有一个需求需要完成：允许管理者在职员目录中进行一些分析。 Elasticsearch有一个功能叫做聚合(aggregations)，它允许你在数据上生成复杂的分析统计。它很像SQL中的 GROUP BY 但是功能更强大。
