@@ -127,12 +127,11 @@ http.cors.allow-origin: "*"
 
 
 ### 三、实战练习
-#### 1.增删改查操作
 * **在索引中新建一个索引**
 
 *megacorp*
 
-* **PUT**
+#### PUT
 
 *PUT /megacorp/employee/1*
 ```json
@@ -171,7 +170,7 @@ http.cors.allow-origin: "*"
 }
 ```
 
-* **GET**
+#### GET
 
 *megacorp/employee/3*
 
@@ -197,7 +196,7 @@ http.cors.allow-origin: "*"
 
 我们通过HTTP方法 GET 来检索文档，同样的，我们可以使用 DELETE 方法删除文档，使用 HEAD 方法检查某文档是否存在。如果想更新已存在的文档，我们只需再 PUT 一次。
 
-* **SEARCH**
+#### SEARCH
 
 *GET /megacorp/employee/_search?q=last_name:Smith*
 
@@ -232,7 +231,7 @@ http.cors.allow-origin: "*"
 }
 ```
 
-* **DSL语句查询**
+#### DSL语句查询
 查询字符串搜索便于通过命令行完成特定(ad hoc)的搜索，但是它也有局限性（参阅简单搜索章节）。
 Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它允许你构建更加复杂、强大的查询。
 
@@ -249,7 +248,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 
 这会返回与之前查询相同的结果。
 
-* **更加复杂的查询**
+#### 更加复杂的查询
 *POST /megacorp/employee/_search*
 ```json
 {
@@ -272,7 +271,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 }
 ```
 
-* **全文搜索**
+#### 全文搜索
 ```json
 {
   "query": {
@@ -336,7 +335,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 默认情况下，Elasticsearch根据结果相关性评分来对结果集进行排序，所谓的「结果相关性评分」就是文档与查询条件的匹配程度。
 这个例子很好的解释了Elasticsearch如何在各种文本字段中进行全文搜索，并且返回相关性最大的结果集。
 
-* **短语搜索**
+#### 短语搜索
 有时候你想要确切的匹配若干个单词或者短语(phrases)。例如我们想要查询同时包含"rock"和"climbing"（并且是相邻的）的员工记录。我们只要将 match 查询变更为 match_phrase 查询即可:
 ```json
 {
@@ -349,7 +348,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 ```
 毫无疑问，该查询返回John Smith的文档。
 
-* **高亮搜索**
+#### 高亮搜索结果
 很多应用喜欢从每个搜索结果中高亮(highlight)匹配到的关键字，这样用户可以知道为什么这些文档和查询相匹配。
 ```json
 {
@@ -367,5 +366,100 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 ```
 当我们运行这个语句时，会命中与之前相同的结果，但是在返回结果中会有一个新的部分叫做 highlight ，这里包含了来自 about 字段中的文本，并且用 <em></em> 来标识匹配到的单词。
 
-* **分析**
+#### 分析
 最后，我们还有一个需求需要完成：允许管理者在职员目录中进行一些分析。 Elasticsearch有一个功能叫做聚合(aggregations)，它允许你在数据上生成复杂的分析统计。它很像SQL中的 GROUP BY 但是功能更强大。
+
+在Elasticsearch5以后的版本中,聚合这些操作用单独的数据结构(fielddata)缓存到内存里了，需要单独开启, 执行分析查询之前要先执行一下操作
+**PUT megacorp/_mapping/employee/**
+```json
+{
+  "properties": {
+    "interests": { 
+      "type":     "text",
+      "fielddata": true
+    }
+  }
+}
+```
+
+然后进行聚合查询
+**PUT megacorp/employee/_search**
+```json
+{
+  "size": 0,
+  "aggs": {
+    "all_interests": {
+      "terms": {
+        "field": "interests"
+      }
+    }
+  }
+}
+```
+
+查询结果：
+```json
+{
+    "aggregations":{
+        "all_interests":{
+            "doc_count_error_upper_bound":0,
+            "sum_other_doc_count":0,
+            "buckets":[
+                {
+                    "key":"music",
+                    "doc_count":2
+                },
+                {
+                    "key":"forestry",
+                    "doc_count":1
+                },
+                {
+                    "key":"sports",
+                    "doc_count":1
+                }
+            ]
+        }
+    }
+}
+```
+我们可以看到两个职员对音乐有兴趣，一个喜欢林学，一个喜欢运动。
+
+当然聚合查询可以结合一般查，也可以使用分级汇总查询。
+
+**对姓"Smith"的人的兴趣爱好统计**
+```json
+{
+    "query":{
+        "match":{
+            "last_name":"smith"
+        }
+    },
+    "aggs":{
+        "all_interests":{
+            "terms":{
+                "field":"interests"
+            }
+        }
+    }
+}
+```
+
+**分级汇总:统计每种兴趣下职员的平均年龄**
+```json
+{
+    "aggs":{
+        "all_interests":{
+            "terms":{
+                "field":"interests"
+            },
+            "aggs":{
+                "avg_age":{
+                    "avg":{
+                        "field":"age"
+                    }
+                }
+            }
+        }
+    }
+}
+```
