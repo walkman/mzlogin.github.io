@@ -463,3 +463,60 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
     }
 }
 ```
+
+### 4.Elasticsearch集群
+Elasticsearch的集群搭建非常简单。
+只要第二个节点与第一个节点有相同的 cluster.name （请看 ./config/elasticsearch.yml 文件），它就能自动发现并加入第一个节点所在的集群。
+
+学习的过程中没有多余的机器，也不想开多个虚拟机，只想在一台电脑上启动多个节点，这里需要额外增加一点配置。
+
+**1.将Elasticsearch文件夹复制成3分**
+并且修改每个文件夹的名字，比如elasticsearch-6.3.2， elasticsearch-6.3.2a, elasticsearch-6.3.2b
+
+因为复制的elasticsearch文件夹下包含了data文件中先前示例的节点数据，需要把data文件下的文件清空。
+
+**hosts文件**
+
+添加一下IP映射
+```hosts
+127.0.0.1 peer1
+127.0.0.1 peer2
+127.0.0.1 peer3
+```
+
+**elasticsearch.yml**
+
+依次打开三个elasticsearch中config目录下的下elasticsearch.yml配置文件，需要修改的位置如下：
+
+```yaml
+cluster.name: sj-cluster
+node.name: node-1
+network.host: peer1
+http.port: 9201
+transport.tcp.port: 9301
+discovery.zen.ping.unicast.hosts: ["peer1:9301", "peer2:9302","peer3:9303"]
+```
+
+```yaml
+cluster.name: sj-cluster
+node.name: node-2
+network.host: peer2
+http.port: 9202
+transport.tcp.port: 9302
+discovery.zen.ping.unicast.hosts: ["peer1:9301", "peer2:9302","peer3:9303"]
+```
+
+```yaml
+cluster.name: sj-cluster
+node.name: node-3
+network.host: peer3
+http.port: 9203
+transport.tcp.port: 9303
+discovery.zen.ping.unicast.hosts: ["peer1:9301", "peer2:9302","peer3:9303"]
+```
+
+**依次启动3个Elasticsearch节点和插件**
+
+集群部署完成， 打开http://localhost:9100/ 页面，会看到3个节点的信息。 前面学习的CRUD操作在集群里面是完全一样的。
+
+
