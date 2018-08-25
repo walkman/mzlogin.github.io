@@ -57,7 +57,7 @@ GET /_cat/health?v   #可以看到集群状态
 一个索引可以存储超出单个结点硬件限制的大量数据。比如，一个具有10亿文档的索引占据1TB的磁盘空间，而任一节点可能没有这样大的磁盘空间来存储或者单个节点处理搜索请求，响应会太慢。
 为了解决这个问题，Elasticsearch提供了将索引划分成多片的能力，这些片叫做分片。当你创建一个索引的时候，你可以指定你想要的分片的数量。每个分片本身也是一个功能完善并且独立的“索引”，这个“索引” 可以被放置到集群中的任何节点上。
 
-### 二.安装运行ElasticSearch
+### 二、安装运行ElasticSearch
 
 #### 1.ElasticSearch下载安装
 本文以windows7 64位系统 演示。
@@ -464,7 +464,7 @@ Elasticsearch提供丰富且灵活的查询语言叫做DSL查询(Query DSL),它�
 }
 ```
 
-### 4.Elasticsearch集群
+### 四、Elasticsearch集群
 Elasticsearch的集群搭建非常简单。
 只要第二个节点与第一个节点有相同的 cluster.name （请看 ./config/elasticsearch.yml 文件），它就能自动发现并加入第一个节点所在的集群。
 
@@ -475,7 +475,7 @@ Elasticsearch的集群搭建非常简单。
 
 因为复制的elasticsearch文件夹下包含了data文件中先前示例的节点数据，需要把data文件下的文件清空。
 
-**hosts文件**
+**2.修改hosts文件**
 
 添加一下IP映射
 ```hosts
@@ -484,7 +484,7 @@ Elasticsearch的集群搭建非常简单。
 127.0.0.1 peer3
 ```
 
-**elasticsearch.yml**
+**3.修改elasticsearch.yml**
 
 依次打开三个elasticsearch中config目录下的下elasticsearch.yml配置文件，需要修改的位置如下：
 
@@ -515,7 +515,7 @@ transport.tcp.port: 9303
 discovery.zen.ping.unicast.hosts: ["peer1:9301", "peer2:9302","peer3:9303"]
 ```
 
-**依次启动3个Elasticsearch节点和插件**
+**4.依次启动3个Elasticsearch节点和插件**
 
 集群部署完成， 打开http://localhost:9100/ 页面，会看到3个节点的信息。 前面学习的CRUD操作在集群里面是完全一样的。
 
