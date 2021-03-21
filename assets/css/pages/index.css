@@ -5,8 +5,8 @@
 
 .home .banner{
     background-image: url('../../images/banner.jpg');
-    background-size: 100%;
-    background-position-y: center;
+    background-size: cover;
+    background-position: center;
 }
 
 .home .banner .collection-head {
