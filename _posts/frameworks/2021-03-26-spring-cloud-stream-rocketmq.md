@@ -6,7 +6,31 @@ excerpt: Spring Cloud Stream集成rocketMQ
 tags: SpringCloud, rocketMQ
 ---
 
-### 一、用IDEA创建一个maven项目
+### 一、Spring Cloud Stream 介绍
+Spring Cloud Stream 是一个用于构建基于消息的微服务应用框架，使用 Spring Integration 与 Broker 进行连接。
+```text
+一般来说，消息队列中间件都有一个 Broker Server（代理服务器），消息中转角色，负责存储消息、转发消息。
+例如说在 RocketMQ 中，Broker 负责接收从生产者发送来的消息并存储、同时为消费者的拉取请求作准备。
+另外，Broker 也存储消息相关的元数据，包括消费者组、消费进度偏移和主题和队列消息等。
+```
+Spring Cloud Stream 提供了消息中间件的统一抽象，推出了 publish-subscribe、consumer groups、partition 这些统一的概念。
+
+Spring Cloud Stream 内部有两个概念：Binder 和 Binding。
+
+##### Binder
+跟消息中间件集成的组件，用来创建对应的 Binding。各消息中间件都有自己的 Binder 具体实现。
+* Kafka 实现了 KafkaMessageChannelBinder
+* RabbitMQ 实现了 RabbitMessageChannelBinder
+* RocketMQ 实现了 RocketMQMessageChannelBinder
+
+##### Binding
+包括 Input Binding 和 Output Binding。Binding 在消息中间件与应用程序提供的 Provider 和 Consumer 之间提供了一个桥梁，
+实现了开发者只需使用应用程序的 Provider 或 Consumer 生产或消费数据即可，屏蔽了开发者与底层消息中间件的接触。
+
+
+
+
+### 二、用IDEA创建一个maven项目
 
 #### 1. 创建依赖配置
 ```xml
