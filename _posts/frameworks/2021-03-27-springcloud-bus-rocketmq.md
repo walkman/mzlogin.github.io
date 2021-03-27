@@ -13,7 +13,7 @@ spring cloud bus整合java的事件处理机制和消息中间件的发送和接
 
 spring cloud bus与spring cloud config的整合，并以RocketMQ作为消息代理。实现了应用配置的动态更新。
 
-![一致性hash算法](/images/posts/frameworks/springcloudbus.png)
+![消息总线](/images/posts/frameworks/springcloudbus.png)
 
 向service A的实例3发送post请求，访问/bus/refresh接口，此时，service A的实例3就会将刷新请求发送到消息总线上，该消息事件会被service A的实例1和实例2从总线中获取到，并重新从config server中获取它们的配置信息，从而实现配置信息的动态更新。
 
