@@ -79,7 +79,7 @@ spring.cloud.config.label=master
 * spring.cloud.config.server.git.username：访问git仓库的用户名
 * spring.cloud.config.server.git.password：访问git仓库的用户密码
 
-如果Git仓库为公开仓库，可以不填写用户名和密码，如果是私有仓库需要填写，本例子是本地文件目录，放心使用。
+如果Git仓库为公开仓库，可以不填写用户名和密码，如果是私有仓库需要填写。 本例子是使用的本地GIT仓库，需要在本地文件夹创建git仓库，并添加配置文件。
 
 C:/Repository/中有个文件config-client-dev.properties文件中有一个属
 
