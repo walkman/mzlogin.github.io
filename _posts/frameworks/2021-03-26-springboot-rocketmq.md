@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Springboot快速集成rocketMQ
-categories: rocketMQ
+categories: [Springboot,RocketMQ]
 excerpt: RocketMQ是目前主流的消息中间件之一，并且自身就支持分布式功能。最初由阿里巴巴团队开发，并且经历过双十一等海量消息场景的考验，后捐赠给Apache开源基金会，这也是为什么我们经常听说RocketMQ是阿里巴巴的消息中间件，项目却在Apache的顶级项目中。
 tags: Springboot, rocketMQ
 ---

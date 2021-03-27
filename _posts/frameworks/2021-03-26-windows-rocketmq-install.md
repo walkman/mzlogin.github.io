@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Windows系统安装rocketMQ
-categories: rocketMQ
+categories: RocketMQ
 excerpt: 为了学习消息中间件，学习spring cloud stream, 首先需要在Windows系统安装rocketMQ服务器和控制台。
 tags: Windows, rocketMQ
 ---

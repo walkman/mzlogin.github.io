@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Spring Cloud Stream集成rocketMQ
-categories: rocketMQ
+categories: [SpringCloud,RocketMQ]
 excerpt: Spring Cloud Stream集成rocketMQ
 tags: SpringCloud, rocketMQ
 ---
