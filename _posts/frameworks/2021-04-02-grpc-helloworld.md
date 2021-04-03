@@ -19,7 +19,7 @@ gRPC的定义：
 ![grpc架构图](/images/posts/frameworks/grpc_concept_diagram_00.png)
 
 
-### 二、 项目实战Hello World
+### 二、 简单rpc调用
 
 主要流程：
 1. 创建maven项目
@@ -418,41 +418,54 @@ public class MetricsServer {
 
 #### 3.创建客户端代码
 
-通过BlockingStub 调用服务
+通过异步Stub 调用服务
 ```java
 public class MetricsClient {
     private static final Logger logger = Logger.getLogger(MetricsClient.class.getName());
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         int port = 50051;
-        //获取客户端桩对象
+//        //获取客户端桩对象
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
-        logger.info("new channel");
-        MetricsServiceGrpc.MetricsServiceBlockingStub stub = MetricsServiceGrpc.newBlockingStub(channel);
-        logger.info("new stub");
-        //发起rpc请求，设置StreamObserver用于监听服务器返回结果
-        Iterator<Average> iterator = stub.collectServerStream(Metric.newBuilder().setMetric(1L).build());
+        MetricsServiceGrpc.MetricsServiceStub stub = MetricsServiceGrpc.newStub(channel);
 
-        while (iterator.hasNext()){
-            logger.info("call result: " + iterator.next().getVal());
-        }
+        //发起rpc请求，设置StreamObserver用于监听服务器返回结果
+        stub.collectServerStream(Metric.newBuilder().setMetric(1L).build(), new StreamObserver<Average>() {
+            @Override
+            public void onNext(Average value) {
+                System.out.println(Thread.currentThread().getName() + "Average: " + value.getVal());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("error:" + t.getLocalizedMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("onCompleted:");
+
+            }
+        });
+
+        channel.shutdown().awaitTermination(50, TimeUnit.SECONDS);
     }
 }
 ```
 
+代码最后要有等待并且关闭通道的操作。
+
 #### 4.测试
-先启动服务端，
-再启动客户端后，可以看到iterator会源源不断的接受到服务端返回的数据。
+先启动服务端，再启动客户端后，可以看到StreamObserver的onNext方法会源源不断的接受到服务端返回的数据。
 
 ```text
-四月 03, 2021 8:44:56 下午 vip.sunjin.examples.helloworld.MetricsClient main
-信息: call result: 0.7101849056320707
-四月 03, 2021 8:44:57 下午 vip.sunjin.examples.helloworld.MetricsClient main
-信息: call result: 0.7101849056320707
-四月 03, 2021 8:44:58 下午 vip.sunjin.examples.helloworld.MetricsClient main
-信息: call result: 0.7101849056320707
-四月 03, 2021 8:44:59 下午 vip.sunjin.examples.helloworld.MetricsClient main
-信息: call result: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+grpc-default-executor-0Average: 0.7101849056320707
+onCompleted:
 ```
 
 服务端流使用场景：
@@ -460,7 +473,156 @@ public class MetricsClient {
 * 客户端请求一次，但是需要服务端源源不断的返回大量数据时候，比如大批量数据查询的场景。
 * 比如客户端订阅服务端的一个服务数据，服务端发现有新数据时，源源不断的吧数据推送给客户端。
 
-### 三、 grpc客户端流
+### 四、 grpc客户端流
 
 客户端流模式是说客户端发起请求与服务端建立链接后，可以使用同一连接，不断的向服务端传送数据，等客户端把全部数据都传送完毕后，服务端才返回一个请求结果。
+
+#### 1. 定义RPC服务数据结构 proto文件
+
+这里修改service的定义，其他不变。
+MetricsService.proto
+```text
+service MetricsService {
+  rpc collectClientStream (stream Metric) returns (Average);
+}
+```
+
+#### 2.创建服务端代码
+
+如上rpc方法的入参类型前添加stream标识 是服务端流，然后服务端实现代码如下：
+```java
+
+public class MetricsServiceImpl extends MetricsServiceGrpc.MetricsServiceImplBase {
+    private static final Logger logger = Logger.getLogger(MetricsServiceImpl.class.getName());
+    /**
+     * 客户端流
+     *
+     * @param responseObserver
+     * @return
+     */
+    @Override
+    public StreamObserver<Metric> collectClientStream(StreamObserver<Average> responseObserver) {
+        return new StreamObserver<Metric>() {
+            private long sum = 0;
+            private long count = 0;
+
+            @Override
+            public void onNext(Metric value) {
+                logger.info("value: " + value);
+                sum += value.getMetric();
+                count++;
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                logger.info("severError:" + t.getLocalizedMessage());
+                responseObserver.onError(t);
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onNext(Average.newBuilder()
+                        .setVal(sum / count)
+                        .build());
+                logger.info("serverComplete: ");
+                responseObserver.onCompleted();
+            }
+        };
+    }
+}
+```
+如上代码，服务端使用流式对象的onNext方法不断接受客户端发来的数据，然后等客户端发送结束后，使用onCompleted方法，把响应结果写回客户端。
+
+服务端启动类MetricsServer不需要修改
+
+#### 3.创建客户端代码
+
+客户端调用服务需要使用异步的Stub.
+```java
+public class MetricsClient2 {
+    private static final Logger logger = Logger.getLogger(MetricsServer.class.getName());
+    public static void main(String[] args) throws InterruptedException {
+        int port = 50051;
+        //1.创建客户端桩
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build();
+        MetricsServiceGrpc.MetricsServiceStub stub = MetricsServiceGrpc.newStub(channel);
+
+        //2.发起请求，并设置结果回调监听
+        StreamObserver<Metric> collect = stub.collectClientStream(new StreamObserver<Average>() {
+            @Override
+            public void onNext(Average value) {
+                logger.info(Thread.currentThread().getName() + "Average: " + value.getVal());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                logger.info("error:" + t.getLocalizedMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                logger.info("onCompleted:");
+
+            }
+        });
+
+        //3.使用同一个链接，不断向服务端传送数据
+        Stream.of(1L, 2L, 3L, 4L,5L).map(l -> Metric.newBuilder().setMetric(l).build())
+                .forEach(metric -> {
+            collect.onNext(metric);
+            logger.info("send to server: " + metric.getMetric());
+        });
+
+        Thread.sleep(3000);
+        collect.onCompleted();
+        channel.shutdown().awaitTermination(50, TimeUnit.SECONDS);
+    }
+}
+```
+
+#### 4.测试
+先启动服务端，再启动客户端后，可以看到代码3会把数据1，2，3，4，5通过同一个链接发送到服务端，
+然后等服务端接收完毕数据后，会计算接受到的数据的平均值，然后把平均值写回客户端。
+然后代码2设置的监听器的onNext方法就会被回调，然后打印出服务端返回的平均值3。
+
+```text
+四月 03, 2021 10:10:26 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 1
+四月 03, 2021 10:10:26 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 2
+四月 03, 2021 10:10:26 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 3
+四月 03, 2021 10:10:26 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 4
+四月 03, 2021 10:10:26 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 5
+四月 03, 2021 10:10:30 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-2Average: 3.0
+```
+
+客户端流使用场景：
+* 比如数据批量计算场景：如果只用simple rpc的话，服务端就要一次性收到大量数据，并且在收到全部数据之后才能对数据进行计算处理。如果用客户端流 rpc的话，服务端可以在收到一些记录之后就开始处理，也更有实时性。
+
+
+
+### 五、grpc双向流
+
+双向流意味着客户端向服务端发起请求后，客户端可以源源不断向服务端写入数据的同时，服务端可以源源不断向客户端写入数据。
+
+
+#### 1. 定义RPC服务数据结构 proto文件
+
+这里修改service的定义，其他不变。
+MetricsService.proto
+```text
+service MetricsService {
+  rpc collectTwoWayStream (stream Metric) returns (stream Average);
+}
+```
+
+如上rpc方法的入参类型前添加stream标识 是客户端流，然后服务端实现代码如下：
+
+
+
+
 
