@@ -332,3 +332,135 @@ public class HelloWorldClient {
 信息: Greeting Reply: Hello neil
 ```
 
+### 三、 grpc服务端流
+一般业务场景下，我们都是使用grpc的simple-rpc模式，也就是每次客户端发起请求，服务端会返回一个响应结果的模式。
+
+但是grpc除了这种一来一往的请求模式外，还有流式模式。
+
+服务端流模式是说客户端发起一次请求后，服务端在接受到请求后，可以以流的方式，使用同一连接，不断的向客户端写回响应结果，客户端则可以源源不断的接受到服务端写回的数据。
+
+下面我们通过简单例子，来说明如何使用，服务端端流。
+
+#### 1. 定义RPC服务数据结构 proto文件
+
+MetricsService.proto
+```text
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "vip.sunjin.examples.helloworld";
+option java_outer_classname = "MetricsServiceProto";
+
+
+message Metric {
+  int64 metric = 2;
+}
+
+message Average {
+  double val = 1;
+}
+
+service MetricsService {
+  rpc collectServerStream (Metric) returns (stream Average);
+}
+```
+然后使用maven编译项目 生成基础类
+
+#### 2.创建服务端代码
+
+服务实现类
+```java
+public class MetricsServiceImpl extends MetricsServiceGrpc.MetricsServiceImplBase {
+    private static final Logger logger = Logger.getLogger(MetricsServiceImpl.class.getName());
+    /**
+     * 服务端流
+     * @param request
+     * @param responseObserver
+     */
+    @Override
+    public void collectServerStream(Metric request, StreamObserver<Average> responseObserver) {
+        logger.info("received request : " +  request.getMetric());
+        for(int i = 0; i  < 10; i++){
+            responseObserver.onNext(Average.newBuilder()
+                    .setVal(new Random(1000).nextDouble())
+                    .build());
+            logger.info("send to client");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        responseObserver.onCompleted();
+    }
+
+}
+```
+
+服务端Server启动
+```java
+public class MetricsServer {
+    private static final Logger logger = Logger.getLogger(MetricsServer.class.getName());
+    public static void main(String[] args) throws IOException, InterruptedException {
+        int port = 50051;
+//        //启动服务
+        MetricsServiceImpl metricsService = new MetricsServiceImpl();
+        Server server = ServerBuilder.forPort(port).addService(metricsService).build();
+        server.start();
+
+        logger.info("Server started, listening on " + port);
+
+        server.awaitTermination();
+    }
+}
+```
+
+
+#### 3.创建客户端代码
+
+通过BlockingStub 调用服务
+```java
+public class MetricsClient {
+    private static final Logger logger = Logger.getLogger(MetricsClient.class.getName());
+
+    public static void main(String[] args) {
+        int port = 50051;
+        //获取客户端桩对象
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:" + port).usePlaintext().build();
+        logger.info("new channel");
+        MetricsServiceGrpc.MetricsServiceBlockingStub stub = MetricsServiceGrpc.newBlockingStub(channel);
+        logger.info("new stub");
+        //发起rpc请求，设置StreamObserver用于监听服务器返回结果
+        Iterator<Average> iterator = stub.collectServerStream(Metric.newBuilder().setMetric(1L).build());
+
+        while (iterator.hasNext()){
+            logger.info("call result: " + iterator.next().getVal());
+        }
+    }
+}
+```
+
+#### 4.测试
+先启动服务端，
+再启动客户端后，可以看到iterator会源源不断的接受到服务端返回的数据。
+
+```text
+四月 03, 2021 8:44:56 下午 vip.sunjin.examples.helloworld.MetricsClient main
+信息: call result: 0.7101849056320707
+四月 03, 2021 8:44:57 下午 vip.sunjin.examples.helloworld.MetricsClient main
+信息: call result: 0.7101849056320707
+四月 03, 2021 8:44:58 下午 vip.sunjin.examples.helloworld.MetricsClient main
+信息: call result: 0.7101849056320707
+四月 03, 2021 8:44:59 下午 vip.sunjin.examples.helloworld.MetricsClient main
+信息: call result: 0.7101849056320707
+```
+
+服务端流使用场景：
+
+* 客户端请求一次，但是需要服务端源源不断的返回大量数据时候，比如大批量数据查询的场景。
+* 比如客户端订阅服务端的一个服务数据，服务端发现有新数据时，源源不断的吧数据推送给客户端。
+
+### 三、 grpc客户端流
+
+客户端流模式是说客户端发起请求与服务端建立链接后，可以使用同一连接，不断的向服务端传送数据，等客户端把全部数据都传送完毕后，服务端才返回一个请求结果。
+

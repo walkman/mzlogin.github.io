@@ -1,7 +1,7 @@
 ---
 layout: post
 title: SpringCloud Ribbon 微服务负载均衡
-categories: [SpringCloud,Ribbon]
+categories: [SpringCloud,负载均衡]
 excerpt: 在微服务架构中，业务都会被拆分成一个独立的服务，服务与服务的通讯是基于http restful的。Spring cloud有两种服务调用方式，一种是ribbon+restTemplate，另一种是feign。在这一篇文章首先讲解下基于ribbon+rest。
 keywords: Ribbon
 ---
