@@ -489,7 +489,7 @@ service MetricsService {
 
 #### 2.创建服务端代码
 
-如上rpc方法的入参类型前添加stream标识 是服务端流，然后服务端实现代码如下：
+如上rpc方法的入参类型前添加stream标识 是客户端流，然后服务端实现代码如下：
 ```java
 
 public class MetricsServiceImpl extends MetricsServiceGrpc.MetricsServiceImplBase {
@@ -612,7 +612,7 @@ public class MetricsClient2 {
 
 #### 1. 定义RPC服务数据结构 proto文件
 
-这里修改service的定义，其他不变。
+这里修改service的定义，其他不变。 重新生成基础代码。
 MetricsService.proto
 ```text
 service MetricsService {
@@ -620,9 +620,66 @@ service MetricsService {
 }
 ```
 
-如上rpc方法的入参类型前添加stream标识 是客户端流，然后服务端实现代码如下：
+如上rpc方法的入参类型前添加stream标识, 返回参数前也添加stream标识 就是双向流，然后服务端实现代码如下：
+
+双向流的代码和客户端流基本一样，只是双向流可以同时支持双向的持续写入。
 
 
+#### 2.创建服务端代码
+
+将服务实现类进行修改用来测试双向流。
+```java
+public void onNext(Metric value) {
+    logger.info("value: " + value);
+    sum += value.getMetric();
+    count++;
+    responseObserver.onNext(Average.newBuilder()
+            .setVal(sum * 1.0/ count)
+            .build());
+}
+```
+如上代码，服务端使用流式对象的onNext方法不断接受客户端发来的数据，
+然后 不断的调用参数中的流对象把响应结果持续的写回客户端。 实现了双向流式调用。
 
 
+#### 3.创建客户端代码
+客户端代码主要是把onCompleted之前的线程等待时间加长，以便等待服务端持续的返回。
+
+```java
+Thread.sleep(10000);
+collect.onCompleted();
+```
+
+
+#### 4.测试
+先启动服务端，再启动客户端后，可以看到代码3会把数据1，2，3，4，5通过同一个链接发送到服务端，
+然后等服务端接收数据后，会实时的计算接受到的数据的平均值，然后把平均值写回客户端。
+然后代码2设置的监听器的onNext方法就会被回调，然后打印出服务端返回的平均值。
+
+```text
+四月 04, 2021 2:16:35 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 1
+四月 04, 2021 2:16:35 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 2
+四月 04, 2021 2:16:35 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 3
+四月 04, 2021 2:16:35 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 4
+四月 04, 2021 2:16:35 下午 vip.sunjin.examples.helloworld.MetricsClient2 lambda$main$1
+信息: send to server: 5
+四月 04, 2021 2:16:38 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 1.0
+四月 04, 2021 2:16:38 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 1.5
+四月 04, 2021 2:16:38 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 2.0
+四月 04, 2021 2:16:38 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 2.5
+四月 04, 2021 2:16:38 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 3.0
+四月 04, 2021 2:16:45 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onNext
+信息: grpc-default-executor-1Average: 3.0
+四月 04, 2021 2:16:45 下午 vip.sunjin.examples.helloworld.MetricsClient2$1 onCompleted
+信息: clientCompleted:
+```
 
