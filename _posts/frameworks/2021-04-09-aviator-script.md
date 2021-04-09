@@ -225,6 +225,11 @@ public class MathSumFunction extends AbstractVariadicFunction {
  */
 @Test
 public void testSum() {
+    Map<String, Object> env = new HashMap<>();
+    env.put("a", 100.5);
+    env.put("b", 20);
+    env.put("c", 30L);
+    env.put("d", 20.3F);
     AviatorEvaluator.addFunction(new MathSumFunction());
 
     Expression compiledExp = AviatorEvaluator.compile("math.sum()", true);
